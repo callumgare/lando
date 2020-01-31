@@ -4,21 +4,6 @@ vcl 4.0;
 
 sub vcl_recv {
 
-  # Always have a `has_js=1` cookie. This is set by Drupal to indicate that the
-  # client browser supports JavaScript.
-  # TODO (Mark): It isn't clear *why* we want to force has_js=1, update this
-  #              comment if you know, please.
-  #
-  # NOTE(jesse): WAT
-  #   https://www.drupal.org/node/229825  seems to be there reason why here?
-  if (req.http.Cookie) {
-    if (req.http.Cookie !~ "has_js=1") {
-      set req.http.Cookie = "has_js=1; " + req.http.Cookie;
-    }
-  } else {
-    set req.http.Cookie = "has_js=1";
-  }
-
   if (req.restarts == 0) {
     if (req.http.x-forwarded-for) {
       set req.http.X-Forwarded-For =
@@ -192,6 +177,7 @@ sub vcl_recv {
     # allow caching for these; we will keep a separate copy of the content per cookie value.
     set req.http.Cookie = regsuball(req.http.Cookie, ";(STYXKEY[a-zA-Z0-9_-]+=)", "; \1");
     set req.http.Cookie = regsuball(req.http.Cookie, ";(has_js=)", "; \1");
+    set req.http.Cookie = regsuball(req.http.Cookie, ";(big_pipe_nojs=)", "; \1");
     set req.http.Cookie = regsuball(req.http.Cookie, ";(Drupal[a-zA-Z0-9_\.-]+=)", "; \1");
 
     # This is a BuddyPress pattern used in filtering/sorting content.
